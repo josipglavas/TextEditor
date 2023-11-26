@@ -1,0 +1,4 @@
+[submodule "TextEditor-Core/Vendor/ImGui"]
+	path = TextEditor-Core/Vendor/ImGui
+	url = https://github.com/josipglavas/imgui.git
+	branch = docking

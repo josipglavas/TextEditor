@@ -1,8 +1,8 @@
 -- premake5.lua
-workspace "New Project"
+workspace "Text Editor"
    architecture "x64"
    configurations { "Debug", "Release", "Dist" }
-   startproject "App"
+   startproject "TextEditor-App"
 
    -- Workspace-wide build options for MSVC
    filter "system:windows"
@@ -11,7 +11,8 @@ workspace "New Project"
 OutputDir = "%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}"
 
 group "Core"
-	include "Core/Build-Core.lua"
+	include "TextEditor-Core/Build-Core.lua"
+   include "TextEditor-Core/Vendor/ImGui/premake5.lua"
 group ""
 
-include "App/Build-App.lua"
+include "TextEditor-App/Build-App.lua"

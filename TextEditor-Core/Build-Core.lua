@@ -1,4 +1,4 @@
-project "Core"
+project "TextEditor-Core"
    kind "StaticLib"
    language "C++"
    cppdialect "C++20"
@@ -9,7 +9,13 @@ project "Core"
 
    includedirs
    {
-      "Source"
+      "Source",
+      "Vendor/ImGui"
+   }
+
+   links
+   {
+      "ImGui"
    }
 
    targetdir ("../Binaries/" .. OutputDir .. "/%{prj.name}")

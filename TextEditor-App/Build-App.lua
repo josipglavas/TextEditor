@@ -1,4 +1,4 @@
-project "App"
+project "TextEditor-App"
    kind "ConsoleApp"
    language "C++"
    cppdialect "C++20"
@@ -12,12 +12,13 @@ project "App"
       "Source",
 
 	  -- Include Core
-	  "../Core/Source"
+	  "../TextEditor-Core/Source"
    }
 
    links
    {
-      "Core"
+      "TextEditor-Core",
+      "d3d9"
    }
 
    targetdir ("../Binaries/" .. OutputDir .. "/%{prj.name}")
@@ -39,6 +40,7 @@ project "App"
        symbols "On"
 
    filter "configurations:Dist"
+   kind "WindowedApp"
        defines { "DIST" }
        runtime "Release"
        optimize "On"
