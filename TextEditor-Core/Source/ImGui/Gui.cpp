@@ -14,7 +14,90 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
 	LPARAM longParameter
 );
 
+struct Funcs {
+	static int MyResizeCallback(ImGuiInputTextCallbackData* data) {
+		if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+			ImVector<char>* my_str = (ImVector<char>*)data->UserData;
+			IM_ASSERT(my_str->begin() == data->Buf);
+
+			// Resize the vector
+			my_str->resize(data->BufSize);
+
+			// Null-terminate the buffer
+			if (!my_str->empty() && (*my_str)[my_str->size() - 1] != '\0') {
+				my_str->push_back('\0');
+			}
+
+			// Set the buffer pointer
+			data->Buf = my_str->begin();
+
+			// Check if the text is empty and reset vector size
+			if (data->BufTextLen == 0) {
+				my_str->clear();
+			}
+		}
+		return 0;
+	}
+
+	static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0) {
+		IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
+
+		// Use InputTextMultiline with the ImGuiInputTextFlags_CallbackResize flag
+		bool valueChanged = ImGui::InputTextMultiline(label, my_str->begin(), my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, MyResizeCallback, (void*)my_str);
+
+		return valueChanged;
+	}
+	//static int MyResizeCallback(ImGuiInputTextCallbackData* data) {
+	//	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+	//		ImVector<char>* my_str = (ImVector<char>*)data->UserData;
+	//		IM_ASSERT(my_str->begin() == data->Buf);
+	//		my_str->resize(data->BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
+	//		data->Buf = my_str->begin();
+	//	}
+	//	return 0;
+	//}
+	//static int MyResizeCallback(ImGuiInputTextCallbackData* data) {
+	//	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+	//		ImVector<char>* my_str = (ImVector<char>*)data->UserData;
+	//		IM_ASSERT(my_str->begin() == data->Buf);
+
+	//		// Resize the vector
+	//		my_str->resize(data->BufSize);
+
+	//		// Null-terminate the buffer
+	//		my_str->push_back('\0');
+
+	//		// Set the buffer pointer
+	//		data->Buf = my_str->begin();
+	//	}
+	//	return 0;
+	//}
+	///*static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0) {
+	//	IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
+	//	return ImGui::InputTextMultiline(label, my_str->begin(), (size_t)my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (void*)my_str);
+	//}*/
+	//static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0) {
+	//	IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
+
+	//	// Resize the vector to fit the content
+	//	my_str->resize(size_t(ImGui::CalcTextSize(my_str->begin()).x / ImGui::GetFontSize()));
+
+	//	// Use InputTextMultiline without the ImGuiInputTextFlags_CallbackResize flag
+	//	bool valueChanged = ImGui::InputTextMultiline(label, my_str->begin(), my_str->size(), size, flags);
+
+	//	// Ensure null-termination
+	//	if (!my_str->empty() && my_str->back() != '\0') {
+	//		my_str->push_back('\0');
+	//	}
+
+	//	return valueChanged;
+	//}
+};
+
 namespace TextEditorCore {
+
+	ImVector<char> my_str;
+
 	ImFont* defaultFont = NULL;
 	LRESULT WINAPI WindowProcess(
 		HWND window,
@@ -211,6 +294,7 @@ namespace TextEditorCore {
 	}
 	void Render() noexcept {
 		ImGuiIO& io = ImGui::GetIO();
+
 		//set window properties
 		static bool no_titlebar = true;
 		static bool auto_resize = true;
@@ -254,42 +338,33 @@ namespace TextEditorCore {
 		ImGui::Begin("Text Editor", &appRunning, window_flags);
 		ImGui::PushFont(defaultFont);
 
-		struct Funcs {
-			static int MyResizeCallback(ImGuiInputTextCallbackData* data) {
-				if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
-					ImVector<char>* my_str = (ImVector<char>*)data->UserData;
-					IM_ASSERT(my_str->begin() == data->Buf);
-					my_str->resize(data->BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
-					data->Buf = my_str->begin();
-				}
-				return 0;
-			}
-			static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0) {
-				IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
-				return ImGui::InputTextMultiline(label, my_str->begin(), (size_t)my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (void*)my_str);
-			}
-		};
-
-		static ImVector<char> my_str;
+		//static ImVector<char> my_str;
 
 		if (ImGui::BeginMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
 				if (ImGui::MenuItem("Open...", "Ctrl+O")) {
-					my_str.clear();
-					my_str = TextEditorCore::OpenFile();
 
-					//DEBUGGING
-					if (!my_str.empty()) {
+					TextEditorCore::OpenFile(&my_str);
+					/*if (!my_str.empty()) {
 						for (char c : my_str) {
 							std::cout << c;
 						}
 					} else {
 						std::cout << "File contents are empty or could not be loaded." << std::endl;
-					}
-					//
+					}*/
 				}
 
-				if (ImGui::MenuItem("Save as ", "Ctrl+S")) { SaveFile(my_str); }
+				if (ImGui::MenuItem("Save as ", "Ctrl+S")) {
+					/*	if (!my_str.empty()) {
+							for (char c : my_str) {
+								std::cout << c;
+							}
+						} else {
+							std::cout << "File contents are empty or could not be loaded." << std::endl;
+						}*/
+
+					SaveFile(&my_str);
+				}
 				if (ImGui::MenuItem("Close", "Ctrl+Q")) {
 					appRunning = false;
 					PostQuitMessage(0);
@@ -298,50 +373,43 @@ namespace TextEditorCore {
 				ImGui::EndMenu();
 			}
 
-			if (ImGui::BeginMenu("Edit")) {
-				if (ImGui::MenuItem("Cut", "Ctrl+X")) { /* Do stuff */ }
-				if (ImGui::MenuItem("Copy", "Ctrl+C")) {
-					const char* character = "value.";
-					ImGui::SetClipboardText(character);
+			//if (ImGui::BeginMenu("Edit")) {
+			//	if (ImGui::MenuItem("Cut", "")) { /* Do stuff */ }
+			//	if (ImGui::MenuItem("Copy", "")) {
+			//		const char* character = "value.";
+			//		ImGui::SetClipboardText(character);
 
-				}
-				if (ImGui::MenuItem("Paste", "Ctrl+V")) {
-					auto characters = ImGui::GetClipboardText();
+			//	}
+			//	if (ImGui::MenuItem("Paste", "Ctrl+V")) {
+			//		auto characters = ImGui::GetClipboardText();
 
-					my_str.clear();
-					for (size_t i = 0; characters[i - 1] != '\0'; ++i) {
-						my_str.push_back(characters[i]);
-					}
-				}
-				ImGui::EndMenu();
-			}
+			//		my_str.clear();
+			//		for (size_t i = 0; characters[i - 1] != '\0'; ++i) {
+			//			my_str.push_back(characters[i]);
+			//		}
+			//	}
+			//	ImGui::EndMenu();
+			//}
 			ImGui::EndMenuBar();
 		}
 
-		// KEYBOARD SHORTCUTS
+		//KEYBOARD SHORTCUTS
 		if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_O, false)) {
-			//if (!my_str.empty())
-			//	my_str.clear();
-			//my_str = TextEditorCore::OpenFile();
-
-			////DEBUGGING
-			//if (!my_str.empty()) {
-			//	for (char c : my_str) {
-			//		std::cout << c;
-			//	}
-			//} else {
-			//	std::cout << "File contents are empty or could not be loaded." << std::endl;
-			//}
-			////
+			TextEditorCore::OpenFile(&my_str);
+			ImGui::PopFont();
+			ImGui::End();
+			ImGui::PopStyleVar(1);
+			ImGui::Render();
+			return;
 		}
 		if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S, false)) {
-			SaveFile(my_str);
+			SaveFile(&my_str);
 		}
 		if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Q, false)) {
 			appRunning = false;
 			PostQuitMessage(0);
 		}
-		// 
+
 
 		if (my_str.empty())
 			my_str.push_back(0);

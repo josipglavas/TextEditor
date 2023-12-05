@@ -11,6 +11,6 @@
 
 namespace TextEditorCore {
 
-	ImVector<char> OpenFile();
-	void SaveFile(const ImVector<char>& textInTheEditor);
+	void OpenFile(ImVector<char>* ptrStrToOverwrite);
+	void SaveFile(const ImVector<char>* textInTheEditor);
 }
