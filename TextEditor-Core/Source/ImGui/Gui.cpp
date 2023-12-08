@@ -47,51 +47,6 @@ struct Funcs {
 
 		return valueChanged;
 	}
-	//static int MyResizeCallback(ImGuiInputTextCallbackData* data) {
-	//	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
-	//		ImVector<char>* my_str = (ImVector<char>*)data->UserData;
-	//		IM_ASSERT(my_str->begin() == data->Buf);
-	//		my_str->resize(data->BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
-	//		data->Buf = my_str->begin();
-	//	}
-	//	return 0;
-	//}
-	//static int MyResizeCallback(ImGuiInputTextCallbackData* data) {
-	//	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
-	//		ImVector<char>* my_str = (ImVector<char>*)data->UserData;
-	//		IM_ASSERT(my_str->begin() == data->Buf);
-
-	//		// Resize the vector
-	//		my_str->resize(data->BufSize);
-
-	//		// Null-terminate the buffer
-	//		my_str->push_back('\0');
-
-	//		// Set the buffer pointer
-	//		data->Buf = my_str->begin();
-	//	}
-	//	return 0;
-	//}
-	///*static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0) {
-	//	IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
-	//	return ImGui::InputTextMultiline(label, my_str->begin(), (size_t)my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (void*)my_str);
-	//}*/
-	//static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0) {
-	//	IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
-
-	//	// Resize the vector to fit the content
-	//	my_str->resize(size_t(ImGui::CalcTextSize(my_str->begin()).x / ImGui::GetFontSize()));
-
-	//	// Use InputTextMultiline without the ImGuiInputTextFlags_CallbackResize flag
-	//	bool valueChanged = ImGui::InputTextMultiline(label, my_str->begin(), my_str->size(), size, flags);
-
-	//	// Ensure null-termination
-	//	if (!my_str->empty() && my_str->back() != '\0') {
-	//		my_str->push_back('\0');
-	//	}
-
-	//	return valueChanged;
-	//}
 };
 
 namespace TextEditorCore {
@@ -177,7 +132,6 @@ namespace TextEditorCore {
 		windowClass.hIconSm = 0;
 
 		RegisterClassExW(&windowClass);
-		//window = CreateWindowA(className, windowName, WS_OVERLAPPEDWINDOW, 0, 0, 1280, 800, 0, 0, windowClass.hInstance, 0);
 		window = CreateWindowW(className, windowName, WS_OVERLAPPEDWINDOW, 0, 0, 1000, 700, nullptr, nullptr, windowClass.hInstance, nullptr);
 
 		ShowWindow(window, SW_SHOWDEFAULT);
@@ -235,11 +189,9 @@ namespace TextEditorCore {
 		ImGuiIO& io = ::ImGui::GetIO();
 
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-		//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
 
 		io.IniFilename = NULL;
 
-		//ImGui::StyleColorsDark();
 		ImGui::StyleColorsClassic();
 		// Set the menu bar height
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -304,10 +256,8 @@ namespace TextEditorCore {
 		static bool no_collapse = true;
 		static bool menu = true;
 		static bool no_settings = true;
-		static float bg_alpha = -0.01f; // <0: default
+		static float bg_alpha = -0.01f;
 
-		// Demonstrate the various window flags. 
-		// Typically you would just use the default.
 		ImGuiWindowFlags  window_flags = 0;
 		if (no_titlebar)  window_flags |= ImGuiWindowFlags_NoTitleBar;
 		if (auto_resize)  window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
@@ -318,13 +268,6 @@ namespace TextEditorCore {
 		if (menu)         window_flags |= ImGuiWindowFlags_MenuBar;
 		if (no_settings)  window_flags |= ImGuiWindowFlags_NoSavedSettings;
 
-		//ImGui::SetNextWindowPos({ 0, 0 });
-		//ImGui::SetNextWindowSize({ WIDTH, HEIGHT });
-		/*
-	const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 20), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiCond_FirstUseEver);
-	*/
 #ifdef IMGUI_HAS_VIEWPORT
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(viewport->Pos);
@@ -338,31 +281,13 @@ namespace TextEditorCore {
 		ImGui::Begin("Text Editor", &appRunning, window_flags);
 		ImGui::PushFont(defaultFont);
 
-		//static ImVector<char> my_str;
-
 		if (ImGui::BeginMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
 				if (ImGui::MenuItem("Open...", "Ctrl+O")) {
-
 					TextEditorCore::OpenFile(&my_str);
-					/*if (!my_str.empty()) {
-						for (char c : my_str) {
-							std::cout << c;
-						}
-					} else {
-						std::cout << "File contents are empty or could not be loaded." << std::endl;
-					}*/
 				}
 
 				if (ImGui::MenuItem("Save as ", "Ctrl+S")) {
-					/*	if (!my_str.empty()) {
-							for (char c : my_str) {
-								std::cout << c;
-							}
-						} else {
-							std::cout << "File contents are empty or could not be loaded." << std::endl;
-						}*/
-
 					SaveFile(&my_str);
 				}
 				if (ImGui::MenuItem("Close", "Ctrl+Q")) {
@@ -373,23 +298,6 @@ namespace TextEditorCore {
 				ImGui::EndMenu();
 			}
 
-			//if (ImGui::BeginMenu("Edit")) {
-			//	if (ImGui::MenuItem("Cut", "")) { /* Do stuff */ }
-			//	if (ImGui::MenuItem("Copy", "")) {
-			//		const char* character = "value.";
-			//		ImGui::SetClipboardText(character);
-
-			//	}
-			//	if (ImGui::MenuItem("Paste", "Ctrl+V")) {
-			//		auto characters = ImGui::GetClipboardText();
-
-			//		my_str.clear();
-			//		for (size_t i = 0; characters[i - 1] != '\0'; ++i) {
-			//			my_str.push_back(characters[i]);
-			//		}
-			//	}
-			//	ImGui::EndMenu();
-			//}
 			ImGui::EndMenuBar();
 		}
 
@@ -410,20 +318,15 @@ namespace TextEditorCore {
 			PostQuitMessage(0);
 		}
 
-
 		if (my_str.empty())
 			my_str.push_back(0);
 
-		//ImGui::Text("1: "); ImGui::SameLine();
 		Funcs::MyInputTextMultiline("##MyStr", &my_str, ImVec2(-FLT_MIN, viewport->WorkSize.y * 0.93f));
 
-		// Add a null-terminator to the vector data
 		if (!my_str.empty() && my_str.back() != '\0') {
 			my_str.push_back('\0');
 		}
 
-		ImGui::Text("Data: %p\nSize: %d\nCapacity: %d", (void*)my_str.begin(), my_str.size(), my_str.capacity());
-		//ImGui::TreePop();
 		ImGui::PopFont();
 		ImGui::End();
 
